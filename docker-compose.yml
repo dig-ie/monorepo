@@ -10,11 +10,18 @@ services:
       target: development
     ports:
       - "3000:3000"
+    volumes:
+      # código do app
+      - ./apps/web:/app/apps/web
+      # shared packages
+      - ./packages:/app/packages
+      # mantém node_modules da imagem
+      - /app/node_modules
+      - /app/apps/web/node_modules
     environment:
       - NODE_ENV=development
     networks:
       - challenge-network
-    command: npm run dev -- --host 0.0.0.0
 
   # API Gateway
   api-gateway:
@@ -26,7 +33,7 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - .:/app
+      - ./apps/api-gateway:/app/apps/api-gateway
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/api-gateway/node_modules
@@ -51,7 +58,7 @@ services:
     ports:
       - "3002:3002"
     volumes:
-      - .:/app
+      - ./apps/auth-service:/app/apps/auth-service
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/auth-service/node_modules
@@ -76,7 +83,7 @@ services:
     ports:
       - "3003:3003"
     volumes:
-      - .:/app
+      - ./apps/tasks-service:/app/apps/tasks-service
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/tasks-service/node_modules
@@ -101,7 +108,7 @@ services:
     ports:
       - "3004:3004"
     volumes:
-      - .:/app
+      - ./apps/notifications-service:/app/apps/notifications-service
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/notifications-service/node_modules
@@ -120,7 +127,6 @@ services:
   db:
     image: postgres:17.5-alpine3.21
     container_name: db
-    attach: false
     ports:
       - "5432:5432"
     networks:
@@ -137,7 +143,6 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     container_name: rabbitmq
-    attach: false
     restart: always
     ports:
       - "5672:5672"
@@ -147,7 +152,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
-    volumes: ["rabbitmq_data:/var/lib/rabbitmq"]
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
 volumes:
   postgres_data:

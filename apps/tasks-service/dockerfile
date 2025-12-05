@@ -1,21 +1,19 @@
-# Stage 1 — Builder
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS development
+
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-COPY ../../pnpm-workspace.yaml ./
-COPY ../../packages ./packages
-COPY . .
+ENV NODE_ENV=development
 
 RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile
-RUN pnpm build
 
-# Stage 2 — Runtime
-FROM node:20-alpine AS runtime
-WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages ./packages
+COPY apps/tasks-service ./apps/tasks-service
 
-COPY --from=builder /app/dist ./dist
-COPY package.json ./
+RUN pnpm install
 
-CMD ["node", "dist/main.js"]
+WORKDIR /app/apps/tasks-service
+
+EXPOSE 3003
+
+CMD ["pnpm", "dev"]

@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+*.log
+.env
+.env.local
+docker-compose.override.yml
+**/.next
+**/.turbo
+coverage
+*.md
