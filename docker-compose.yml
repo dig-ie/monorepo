@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  # Frontend React Application
   web:
     container_name: web
     build:
@@ -10,20 +9,31 @@ services:
       target: development
     ports:
       - "3000:3000"
-    volumes:
-      # código do app
-      - ./apps/web:/app/apps/web
-      # shared packages
-      - ./packages:/app/packages
-      # mantém node_modules da imagem
-      - /app/node_modules
-      - /app/apps/web/node_modules
     environment:
       - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=800
+    volumes:
+      # monta só o que muda no dev (sem matar node_modules da imagem)
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/public:/app/apps/web/public
+      - ./apps/web/index.html:/app/apps/web/index.html
+      - ./apps/web/vite.config.ts:/app/apps/web/vite.config.ts
+      - ./apps/web/tsconfig.json:/app/apps/web/tsconfig.json
+      - ./packages:/app/packages
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''net'').connect({host:''127.0.0.1'',port:3000}).on(''connect'',()=>process.exit(0)).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
     networks:
       - challenge-network
 
-  # API Gateway
   api-gateway:
     container_name: api-gateway
     build:
@@ -32,23 +42,34 @@ services:
       target: development
     ports:
       - "3001:3001"
-    volumes:
-      - ./apps/api-gateway:/app/apps/api-gateway
-      - ./packages:/app/packages
-      - /app/node_modules
-      - /app/apps/api-gateway/node_modules
     environment:
       - NODE_ENV=development
       - PORT=3001
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=800
+    volumes:
+      - ./apps/api-gateway/src:/app/apps/api-gateway/src
+      - ./apps/api-gateway/nest-cli.json:/app/apps/api-gateway/nest-cli.json
+      - ./apps/api-gateway/tsconfig.json:/app/apps/api-gateway/tsconfig.json
+      - ./packages:/app/packages
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=3 --spider http://localhost:3001/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - challenge-network
 
-  # Auth Service
   auth-service:
     container_name: auth-service
     build:
@@ -57,23 +78,34 @@ services:
       target: development
     ports:
       - "3002:3002"
-    volumes:
-      - ./apps/auth-service:/app/apps/auth-service
-      - ./packages:/app/packages
-      - /app/node_modules
-      - /app/apps/auth-service/node_modules
     environment:
       - NODE_ENV=development
       - PORT=3002
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=800
+    volumes:
+      - ./apps/auth-service/src:/app/apps/auth-service/src
+      - ./apps/auth-service/nest-cli.json:/app/apps/auth-service/nest-cli.json
+      - ./apps/auth-service/tsconfig.json:/app/apps/auth-service/tsconfig.json
+      - ./packages:/app/packages
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=3 --spider http://localhost:3002/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - challenge-network
 
-  # Tasks Service
   tasks-service:
     container_name: tasks-service
     build:
@@ -82,23 +114,34 @@ services:
       target: development
     ports:
       - "3003:3003"
-    volumes:
-      - ./apps/tasks-service:/app/apps/tasks-service
-      - ./packages:/app/packages
-      - /app/node_modules
-      - /app/apps/tasks-service/node_modules
     environment:
       - NODE_ENV=development
       - PORT=3003
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=800
+    volumes:
+      - ./apps/tasks-service/src:/app/apps/tasks-service/src
+      - ./apps/tasks-service/nest-cli.json:/app/apps/tasks-service/nest-cli.json
+      - ./apps/tasks-service/tsconfig.json:/app/apps/tasks-service/tsconfig.json
+      - ./packages:/app/packages
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=3 --spider http://localhost:3003/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - challenge-network
 
-  # Notifications Service
   notifications-service:
     container_name: notifications-service
     build:
@@ -107,30 +150,39 @@ services:
       target: development
     ports:
       - "3004:3004"
-    volumes:
-      - ./apps/notifications-service:/app/apps/notifications-service
-      - ./packages:/app/packages
-      - /app/node_modules
-      - /app/apps/notifications-service/node_modules
     environment:
       - NODE_ENV=development
       - PORT=3004
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=800
+    volumes:
+      - ./apps/notifications-service/src:/app/apps/notifications-service/src
+      - ./apps/notifications-service/nest-cli.json:/app/apps/notifications-service/nest-cli.json
+      - ./apps/notifications-service/tsconfig.json:/app/apps/notifications-service/tsconfig.json
+      - ./packages:/app/packages
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=3 --spider http://localhost:3004/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - challenge-network
 
-  # Postgres Database
   db:
     image: postgres:17.5-alpine3.21
     container_name: db
     ports:
       - "5432:5432"
-    networks:
-      - challenge-network
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -138,8 +190,15 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
       POSTGRES_DB: challenge_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    networks:
+      - challenge-network
 
-  # RabbitMQ
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     container_name: rabbitmq
@@ -147,19 +206,23 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    networks:
-      - challenge-network
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+    networks:
+      - challenge-network
 
 volumes:
   postgres_data:
-    driver: local
   rabbitmq_data:
-    driver: local
 
 networks:
   challenge-network:
