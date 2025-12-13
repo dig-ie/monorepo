@@ -1,6 +1,5 @@
 import { DataSourceOptions } from 'typeorm';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-// import { User } from '../users/entities/user.entity'; // exemplo
 
 export function buildTypeOrmConfig(): TypeOrmModuleOptions & DataSourceOptions {
   return {
@@ -11,7 +10,7 @@ export function buildTypeOrmConfig(): TypeOrmModuleOptions & DataSourceOptions {
     password: process.env.DB_PASSWORD ?? 'password',
     database: process.env.DB_NAME ?? 'challenge_db',
 
-    // Enquanto você não define entidades, pode deixar um pattern:
+    // Enquanto não defino entidades, pode pattern:
     entities: [__dirname + '/../**/*.entity.{ts,js}'],
 
     migrations: [__dirname + '/../migrations/*.{ts,js}'],
